@@ -5,30 +5,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
 
 	"github.com/freemen-app/file_storage/domain/dto"
 )
 
 type (
-	Uploader interface {
-		Upload(
-			input *s3manager.UploadInput,
-			options ...func(*s3manager.Uploader),
-		) (*s3manager.UploadOutput, error)
-	}
-
-	BatchDeleter interface {
-		Delete(ctx aws.Context, iter s3manager.BatchDeleteIterator) error
-	}
-
 	Service interface {
 		DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
 	}
 
 	repo struct {
 		service      Service
-		uploader     Uploader
-		batchDeleter BatchDeleter
+		uploader     s3manageriface.UploaderAPI
+		batchDeleter s3manageriface.BatchDelete
 		bucketName   string
 	}
 )

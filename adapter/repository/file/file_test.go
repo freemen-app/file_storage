@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/stretchr/testify/assert"
 
@@ -26,10 +27,7 @@ type (
 
 	mockedUploader struct {
 		baseUrl string
-	}
-
-	uploaderWithErr struct {
-		err error
+		err     error
 	}
 )
 
@@ -41,22 +39,16 @@ func (d *batchDeleterWithErr) Delete(aws.Context, s3manager.BatchDeleteIterator)
 	return d.err
 }
 
-func (m *mockedUploader) Upload(
-	input *s3manager.UploadInput,
-	options ...func(*s3manager.Uploader),
-) (*s3manager.UploadOutput, error) {
-
-	return &s3manager.UploadOutput{
-		Location: fmt.Sprintf("%s/%s/%s", m.baseUrl, *input.Bucket, *input.Key),
-	}, nil
-
+func (m *mockedUploader) Upload(input *s3manager.UploadInput, options ...func(*s3manager.Uploader)) (*s3manager.UploadOutput, error) {
+	if m.err == nil {
+		return &s3manager.UploadOutput{
+			Location: fmt.Sprintf("%s/%s/%s", m.baseUrl, *input.Bucket, *input.Key),
+		}, nil
+	}
+	return nil, m.err
 }
-
-func (u *uploaderWithErr) Upload(
-	input *s3manager.UploadInput,
-	options ...func(*s3manager.Uploader),
-) (*s3manager.UploadOutput, error) {
-	return nil, u.err
+func (m *mockedUploader) UploadWithContext(ctx aws.Context, input *s3manager.UploadInput, options ...func(*s3manager.Uploader)) (*s3manager.UploadOutput, error) {
+	return m.Upload(input)
 }
 
 func TestNew(t *testing.T) {
@@ -87,10 +79,8 @@ func TestRepo_Upload(t *testing.T) {
 	baseUrl := "https://aws.com"
 
 	type fields struct {
-		service      Service
-		uploader     Uploader
-		batchDeleter BatchDeleter
-		bucketName   string
+		uploader   s3manageriface.UploaderAPI
+		bucketName string
 	}
 	tests := []struct {
 		name    string
@@ -117,7 +107,7 @@ func TestRepo_Upload(t *testing.T) {
 		{
 			name: "Error",
 			fields: fields{
-				uploader:   &uploaderWithErr{err: errors.New("test err")},
+				uploader:   &mockedUploader{err: errors.New("test err")},
 				bucketName: "test.bucket",
 			},
 			input: &dto.UploadInput{
@@ -133,7 +123,6 @@ func TestRepo_Upload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repo{
-				service:    tt.fields.service,
 				uploader:   tt.fields.uploader,
 				bucketName: tt.fields.bucketName,
 			}
@@ -146,10 +135,8 @@ func TestRepo_Upload(t *testing.T) {
 
 func TestRepo_Delete(t *testing.T) {
 	type fields struct {
-		service      Service
-		uploader     Uploader
-		batchDeleter BatchDeleter
-		bucketName   string
+		service    Service
+		bucketName string
 	}
 	tests := []struct {
 		name    string
@@ -189,7 +176,6 @@ func TestRepo_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &repo{
 				service:    tt.fields.service,
-				uploader:   tt.fields.uploader,
 				bucketName: tt.fields.bucketName,
 			}
 			err := r.Delete(&tt.input)
@@ -200,9 +186,7 @@ func TestRepo_Delete(t *testing.T) {
 
 func TestRepo_BatchDelete(t *testing.T) {
 	type fields struct {
-		service      Service
-		uploader     Uploader
-		batchDeleter BatchDeleter
+		batchDeleter s3manageriface.BatchDelete
 		bucketName   string
 	}
 	tests := []struct {
