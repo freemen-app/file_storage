@@ -1,0 +1,20 @@
+version: "3.7"
+
+networks:
+  file_storage:
+    name: file_storage
+    driver: bridge
+
+services:
+  file_storage_app:
+    container_name: file_storage_app
+    build: .
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+    networks:
+      - file_storage
+    ports:
+      - 8000:8000

@@ -1,0 +1,9 @@
+api:
+  host: "localhost"
+  port: 8000
+
+logger:
+  level: "debug"
+
+s3:
+  bucket: "${BUCKET_NAME|o4eredko.photos}"

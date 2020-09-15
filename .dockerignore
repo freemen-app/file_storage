@@ -1,0 +1,6 @@
+# IDE dirs
+.idea
+.vs
+
+# Databases dirs
+.data
