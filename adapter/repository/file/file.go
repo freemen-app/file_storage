@@ -1,11 +1,14 @@
 package fileRepo
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	"context"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
+	"github.com/rs/zerolog/log"
 
 	"github.com/freemen-app/file_storage/domain/dto"
 )
@@ -16,10 +19,11 @@ type (
 	}
 
 	repo struct {
-		service      Service
-		uploader     s3manageriface.UploaderAPI
-		batchDeleter s3manageriface.BatchDelete
-		bucketName   string
+		service       Service
+		uploader      s3manageriface.UploaderAPI
+		batchUploader s3manageriface.UploadWithIterator
+		batchDeleter  s3manageriface.BatchDelete
+		bucketName    string
 	}
 )
 
@@ -35,9 +39,14 @@ func New(session *session.Session, bucketName string) *repo {
 	}
 }
 
-func (r *repo) Upload(input *dto.UploadInput) (string, error) {
+func (r *repo) Upload(ctx context.Context, input *dto.UploadInput) (string, error) {
+	log.Info().Msgf("%s", time.Now())
 	s3Input := input.ToS3Input(r.bucketName)
-	resp, err := r.uploader.Upload(s3Input)
+	log.Info().Msgf("%s", time.Now())
+
+	resp, err := r.uploader.UploadWithContext(ctx, s3Input)
+
+	log.Info().Msgf("%s", time.Now())
 	if err != nil {
 		return "", err
 	}
@@ -53,11 +62,11 @@ func (r *repo) Delete(input *dto.DeleteInput) error {
 	return err
 }
 
-func (r *repo) BatchDelete(input *dto.BatchDeleteInput) error {
+func (r *repo) BatchDelete(ctx context.Context, input *dto.BatchDeleteInput) error {
 	s3Input, err := input.ToS3Input(r.bucketName)
 	if err != nil {
 		return err
 	}
-	err = r.batchDeleter.Delete(aws.BackgroundContext(), s3Input)
+	err = r.batchDeleter.Delete(ctx, s3Input)
 	return err
 }

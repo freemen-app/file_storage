@@ -53,8 +53,8 @@ func New(config *config.Config, app *app.App) Api {
 	i.Use(logger.New(loggerConfig))
 	setupMiddlewares(i)
 
-	hander := NewHandler()
-	hander.Register(i)
+	handler := NewHandler(app.FileUseCase)
+	handler.Register(i)
 
 	return &api{
 		config: config,

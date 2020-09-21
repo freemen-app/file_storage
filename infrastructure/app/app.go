@@ -1,8 +1,11 @@
 package app
 
 import (
+	fileRepo "github.com/freemen-app/file_storage/adapter/repository/file"
 	"github.com/freemen-app/file_storage/config"
 	"github.com/freemen-app/file_storage/infrastructure/log"
+	awsSession "github.com/freemen-app/file_storage/infrastructure/store/aws"
+	fileUseCase "github.com/freemen-app/file_storage/usecase/file"
 )
 
 type (
@@ -13,6 +16,7 @@ type (
 	App struct {
 		config       *config.Config
 		cleanupTasks []shutdowner
+		FileUseCase  fileUseCase.UseCase
 	}
 )
 
@@ -21,6 +25,10 @@ func New(config *config.Config) *App {
 
 	app := &App{config: config}
 	defer app.shutdownOnPanic()
+
+	session := awsSession.New()
+	fileRepo := fileRepo.New(session, config.S3.Bucket)
+	app.FileUseCase = fileUseCase.New(fileRepo)
 
 	return app
 }

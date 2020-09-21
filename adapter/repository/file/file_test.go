@@ -17,11 +17,11 @@ import (
 )
 
 type (
-	serviceWithErr struct {
+	mockedDeleter struct {
 		err error
 	}
 
-	batchDeleterWithErr struct {
+	mockedBatchDeleter struct {
 		err error
 	}
 
@@ -31,11 +31,11 @@ type (
 	}
 )
 
-func (s *serviceWithErr) DeleteObject(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+func (s *mockedDeleter) DeleteObject(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
 	return nil, s.err
 }
 
-func (d *batchDeleterWithErr) Delete(aws.Context, s3manager.BatchDeleteIterator) error {
+func (d *mockedBatchDeleter) Delete(aws.Context, s3manager.BatchDeleteIterator) error {
 	return d.err
 }
 
@@ -148,7 +148,7 @@ func TestRepo_Delete(t *testing.T) {
 			name:  "Succeed",
 			input: "https://s3.com/test.bucket/test/test.jpg",
 			fields: fields{
-				service:    &serviceWithErr{err: nil},
+				service:    &mockedDeleter{err: nil},
 				bucketName: "test.bucket",
 			},
 			wantErr: nil,
@@ -157,7 +157,7 @@ func TestRepo_Delete(t *testing.T) {
 			name:  "Error while converting input",
 			input: "https://s3.com/wrong.bucket/test.jpg",
 			fields: fields{
-				service:    &serviceWithErr{err: nil},
+				service:    &mockedDeleter{err: nil},
 				bucketName: "test.bucket",
 			},
 			wantErr: validation.NewError("400", "url: invalid format"),
@@ -166,7 +166,7 @@ func TestRepo_Delete(t *testing.T) {
 			name:  "Error returned from s3",
 			input: "https://s3.com/test.bucket/test/test.jpg",
 			fields: fields{
-				service:    &serviceWithErr{err: errors.New("test error")},
+				service:    &mockedDeleter{err: errors.New("test error")},
 				bucketName: "test.bucket",
 			},
 			wantErr: errors.New("test error"),
@@ -202,7 +202,7 @@ func TestRepo_BatchDelete(t *testing.T) {
 				"https://s3.com/test.bucket/test/test.jpg",
 			}),
 			fields: fields{
-				batchDeleter: &batchDeleterWithErr{err: nil},
+				batchDeleter: &mockedBatchDeleter{err: nil},
 				bucketName:   "test.bucket",
 			},
 			wantErr: nil,
@@ -214,7 +214,7 @@ func TestRepo_BatchDelete(t *testing.T) {
 				"https://s3.com/wrong.bucket/test/test.jpg",
 			}),
 			fields: fields{
-				batchDeleter: &batchDeleterWithErr{err: nil},
+				batchDeleter: &mockedBatchDeleter{err: nil},
 				bucketName:   "test.bucket",
 			},
 			wantErr: validation.NewError("400", "url: invalid format"),
@@ -226,7 +226,7 @@ func TestRepo_BatchDelete(t *testing.T) {
 				"https://s3.com/test.bucket/test/test2.jpg",
 			}),
 			fields: fields{
-				batchDeleter: &batchDeleterWithErr{err: errors.New("test error")},
+				batchDeleter: &mockedBatchDeleter{err: errors.New("test error")},
 				bucketName:   "test.bucket",
 			},
 			wantErr: errors.New("test error"),
