@@ -5,16 +5,29 @@ networks:
     name: file_storage
     driver: bridge
 
+#services:
+#  file_storage_app:
+#    container_name: file_storage_app
+#    build: .
+#    env_file:
+#      - .env
+#    restart: unless-stopped
+#    networks:
+#      - file_storage
+#    ports:
+#      - 8000:8000
+
 services:
+  file_storage_test:
+    build:
+      context: .
+      target: test
+
   file_storage_app:
-    container_name: file_storage_app
-    build: .
-    env_file:
-      - .env
-    restart: unless-stopped
-    volumes:
-      - ./:/app
+    build:
+      context: .
+      target: prod
     networks:
       - file_storage
     ports:
-      - 8000:8000
+      - "8080:8080"
