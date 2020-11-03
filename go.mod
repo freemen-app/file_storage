@@ -3,14 +3,13 @@ module github.com/freemen-app/file_storage
 go 1.14
 
 require (
-	github.com/Joker/hpp v1.0.0 // indirect
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/aws/aws-sdk-go v1.34.22
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
-	github.com/kataras/iris/v12 v12.1.9-0.20200728105652-53c6f4694186
-	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/golang/protobuf v1.4.3
+	github.com/h2non/filetype v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/rs/zerolog v1.15.0
 	github.com/sherifabdlnaby/configuro v0.0.2
@@ -20,7 +19,12 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0 // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/yudai/pp v2.0.1+incompatible // indirect
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
+	golang.org/x/text v0.3.3 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+	google.golang.org/grpc v1.27.0
+	google.golang.org/protobuf v1.25.0
+	gopkg.in/ini.v1 v1.57.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )

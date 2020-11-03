@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -14,16 +16,15 @@ import (
 )
 
 type (
-	Service interface {
-		DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
+	Deleter interface {
+		DeleteObjectWithContext(ctx aws.Context, input *s3.DeleteObjectInput, opts ...request.Option) (*s3.DeleteObjectOutput, error)
 	}
 
 	repo struct {
-		service       Service
-		uploader      s3manageriface.UploaderAPI
-		batchUploader s3manageriface.UploadWithIterator
-		batchDeleter  s3manageriface.BatchDelete
-		bucketName    string
+		deleter      Deleter
+		uploader     s3manageriface.UploaderAPI
+		batchDeleter s3manageriface.BatchDelete
+		bucketName   string
 	}
 )
 
@@ -32,7 +33,7 @@ func New(session *session.Session, bucketName string) *repo {
 	uploader := s3manager.NewUploaderWithClient(service)
 	batchDeleter := s3manager.NewBatchDeleteWithClient(service)
 	return &repo{
-		service:      service,
+		deleter:      service,
 		uploader:     uploader,
 		batchDeleter: batchDeleter,
 		bucketName:   bucketName,
@@ -53,20 +54,20 @@ func (r *repo) Upload(ctx context.Context, input *dto.UploadInput) (string, erro
 	return resp.Location, nil
 }
 
-func (r *repo) Delete(input *dto.DeleteInput) error {
-	s3Input, err := input.ToS3Input(r.bucketName)
-	if err != nil {
+func (r *repo) Delete(ctx context.Context, input dto.DeleteInput) error {
+	if s3Input, err := input.ToS3Input(r.bucketName); err != nil {
+		return err
+	} else if _, err := r.deleter.DeleteObjectWithContext(ctx, s3Input); err != nil {
 		return err
 	}
-	_, err = r.service.DeleteObject(s3Input)
-	return err
+	return nil
 }
 
-func (r *repo) BatchDelete(ctx context.Context, input *dto.BatchDeleteInput) error {
-	s3Input, err := input.ToS3Input(r.bucketName)
-	if err != nil {
+func (r *repo) BatchDelete(ctx context.Context, input dto.BatchDeleteInput) error {
+	if s3Input, err := input.ToS3Input(r.bucketName); err != nil {
+		return err
+	} else if err := r.batchDeleter.Delete(ctx, s3Input); err != nil {
 		return err
 	}
-	err = r.batchDeleter.Delete(ctx, s3Input)
-	return err
+	return nil
 }

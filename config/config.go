@@ -6,12 +6,13 @@ import (
 	"path"
 	"runtime"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/sherifabdlnaby/configuro"
 )
 
 type (
 	Config struct {
-		Api    apiConfig
+		Api    ApiConfig
 		Logger loggerConfig
 		S3     S3Config
 	}
@@ -20,7 +21,7 @@ type (
 		Bucket string
 	}
 
-	apiConfig struct {
+	ApiConfig struct {
 		Host string
 		Port int
 	}
@@ -31,7 +32,7 @@ type (
 	}
 )
 
-func (c *apiConfig) Addr() string {
+func (c ApiConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
@@ -55,4 +56,13 @@ func New(filename string) *Config {
 	}
 
 	return confStruct
+}
+
+func (c *Config) Validate() error {
+	return validation.ValidateStruct(
+		c,
+		validation.Field(&c.Api),
+		validation.Field(&c.S3),
+		validation.Field(&c.Logger),
+	)
 }

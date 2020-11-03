@@ -13,14 +13,14 @@ type (
 
 	UseCase interface {
 		Upload(ctx context.Context, input *dto.UploadInput) (string, error)
-		Delete(input *dto.DeleteInput) error
-		BatchDelete(ctx context.Context, input *dto.BatchDeleteInput) error
+		Delete(ctx context.Context, input dto.DeleteInput) error
+		BatchDelete(ctx context.Context, input dto.BatchDeleteInput) error
 	}
 
 	FileRepo interface {
 		Upload(ctx context.Context, input *dto.UploadInput) (string, error)
-		Delete(input *dto.DeleteInput) error
-		BatchDelete(ctx context.Context, input *dto.BatchDeleteInput) error
+		Delete(ctx context.Context, input dto.DeleteInput) error
+		BatchDelete(ctx context.Context, input dto.BatchDeleteInput) error
 	}
 )
 
@@ -35,18 +35,21 @@ func (u *useCase) Upload(ctx context.Context, input *dto.UploadInput) (string, e
 		return "", err
 	}
 	url, err := u.fileRepo.Upload(ctx, input)
-	return url, err
+	if err != nil {
+		return "", err
+	}
+	return url, nil
 }
 
-func (u *useCase) Delete(input *dto.DeleteInput) error {
+func (u *useCase) Delete(ctx context.Context, input dto.DeleteInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}
-	err := u.fileRepo.Delete(input)
+	err := u.fileRepo.Delete(ctx, input)
 	return err
 }
 
-func (u *useCase) BatchDelete(ctx context.Context, input *dto.BatchDeleteInput) error {
+func (u *useCase) BatchDelete(ctx context.Context, input dto.BatchDeleteInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}

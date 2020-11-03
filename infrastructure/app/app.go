@@ -5,49 +5,49 @@ import (
 	"github.com/freemen-app/file_storage/config"
 	"github.com/freemen-app/file_storage/infrastructure/log"
 	awsSession "github.com/freemen-app/file_storage/infrastructure/store/aws"
+
 	fileUseCase "github.com/freemen-app/file_storage/usecase/file"
 )
 
 type (
-	shutdowner interface {
-		Shutdown()
+	repos struct {
+		File fileUseCase.FileRepo
+	}
+
+	useCases struct {
+		FileUseCase fileUseCase.UseCase
 	}
 
 	App struct {
-		config       *config.Config
-		cleanupTasks []shutdowner
-		FileUseCase  fileUseCase.UseCase
+		config *config.Config
+
+		repos    *repos
+		useCases *useCases
+
+		isRunning bool
 	}
 )
 
 func New(config *config.Config) *App {
+	if err := config.Validate(); err != nil {
+		panic(err)
+	}
 	log.ConfigureLogger(config.Logger.Level)
-
-	app := &App{config: config}
-	defer app.shutdownOnPanic()
-
 	session := awsSession.New()
-	fileRepo := fileRepo.New(session, config.S3.Bucket)
-	app.FileUseCase = fileUseCase.New(fileRepo)
+	repos := &repos{File: fileRepo.New(session, config.S3.Bucket)}
+	useCases := &useCases{FileUseCase: fileUseCase.New(repos.File)}
 
-	return app
-}
-
-func (a *App) AddCleanupTask(s shutdowner) {
-	a.cleanupTasks = append(a.cleanupTasks, s)
-}
-
-func (a *App) Shutdown() {
-	lastIndex := len(a.cleanupTasks) - 1
-
-	for i := range a.cleanupTasks {
-		a.cleanupTasks[lastIndex-i].Shutdown()
+	return &App{
+		config:   config,
+		repos:    repos,
+		useCases: useCases,
 	}
 }
 
-func (a *App) shutdownOnPanic() {
-	if r := recover(); r != nil {
-		a.Shutdown()
-		panic(r)
-	}
+func (a *App) UseCases() *useCases {
+	return a.useCases
+}
+
+func (a *App) Repos() *repos {
+	return a.repos
 }

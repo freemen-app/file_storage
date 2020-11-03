@@ -11,7 +11,7 @@ import (
 
 func TestDeleteInput_Validate(t *testing.T) {
 	type fields struct {
-		Url string
+		url string
 	}
 	tests := []struct {
 		name    string
@@ -21,28 +21,28 @@ func TestDeleteInput_Validate(t *testing.T) {
 		{
 			name: "Valid url",
 			fields: fields{
-				Url: "https://aws.amazonaws.com/bucket/test/test.yml",
+				url: "https://aws.amazonaws.com/bucket/test/test.yml",
 			},
 			wantErr: false,
 		},
 		{
-			name: "Valid Url",
+			name: "Valid url",
 			fields: fields{
-				Url: "aws.amazonaws.com/bucket/test/test.yml",
+				url: "aws.amazonaws.com/bucket/test/test.yml",
 			},
 			wantErr: false,
 		},
 		{
 			name: "Invalid url",
 			fields: fields{
-				Url: "test",
+				url: "test",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := DeleteInput(tt.fields.Url)
+			i := DeleteInput(tt.fields.url)
 			err := i.Validate()
 			assert.EqualValues(t, tt.wantErr, err != nil, err)
 		})
@@ -50,38 +50,30 @@ func TestDeleteInput_Validate(t *testing.T) {
 }
 
 func TestBatchDeleteInput_Validate(t *testing.T) {
-	type fields struct {
-		Urls []DeleteInput
-	}
 	tests := []struct {
 		name    string
-		fields  fields
+		urls    BatchDeleteInput
 		wantErr bool
 	}{
 		{
-			name: "Valid url",
-			fields: fields{
-				Urls: []DeleteInput{
-					DeleteInput("https://aws.amazonaws.com/bucket/test/test.yml"),
-					DeleteInput("https://aws.amazonaws.com/bucket/test/test2.yml"),
-				},
+			name: "valid url",
+			urls: BatchDeleteInput{
+				"https://aws.amazonaws.com/bucket/test/test.yml",
+				"https://aws.amazonaws.com/bucket/test/test2.yml",
 			},
 		},
 		{
-			name: "Invalid url",
-			fields: fields{
-				Urls: []DeleteInput{
-					DeleteInput("https://aws.amazonaws.com/bucket/test/test.yml"),
-					DeleteInput("test"),
-				},
+			name: "invalid url",
+			urls: BatchDeleteInput{
+				"https://aws.amazonaws.com/bucket/test/test.yml",
+				"test",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := BatchDeleteInput(tt.fields.Urls)
-			err := i.Validate()
+			err := tt.urls.Validate()
 			assert.EqualValues(t, tt.wantErr, err != nil, err)
 		})
 	}
@@ -170,7 +162,7 @@ func TestBatchDeleteInput_ToS3Input(t *testing.T) {
 					DeleteInput("https://aws.amazonaws.com/test.bucket/test/test2.yml"),
 				},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
