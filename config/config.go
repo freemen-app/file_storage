@@ -6,6 +6,7 @@ import (
 	"path"
 	"runtime"
 
+	amqpStore "github.com/freemen-app/amqp-store"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/sherifabdlnaby/configuro"
 )
@@ -14,6 +15,7 @@ type (
 	Config struct {
 		Api    ApiConfig
 		Logger loggerConfig
+		AMQP   amqpStore.Config
 		S3     S3Config
 	}
 

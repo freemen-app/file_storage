@@ -5,6 +5,20 @@ api:
 logger:
   level: "debug"
 
+amqp:
+  host: "${AMQP_HOST|localhost}"
+  port: "${AMQP_PORT|5672}"
+  username: "${AMQP_USERNAME}"
+  password: "${AMQP_PASSWORD}"
+  consumes:
+    delete_files:
+      exchange:
+        name: "delete_files"
+        type: "fanout"
+        queue:
+          auto_delete: true
+
+
 s3:
   bucket: "${AWS_BUCKET}"
   region: "${AWS_REGION|eu-central-1}"

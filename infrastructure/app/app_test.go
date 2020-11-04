@@ -54,3 +54,13 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
+
+func TestApp_Start_Shutdown(t *testing.T) {
+	application := app.New(conf)
+
+	assert.NoError(t, application.Start())
+	assert.True(t, application.IsRunning())
+
+	application.Shutdown()
+	assert.False(t, application.IsRunning())
+}
