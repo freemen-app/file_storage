@@ -33,7 +33,7 @@ func New(config *config.Config) *App {
 		panic(err)
 	}
 	log.ConfigureLogger(config.Logger.Level)
-	session := awsSession.New()
+	session := awsSession.New(config.S3)
 	repos := &repos{File: fileRepo.New(session, config.S3.Bucket)}
 	useCases := &useCases{FileUseCase: fileUseCase.New(repos.File)}
 

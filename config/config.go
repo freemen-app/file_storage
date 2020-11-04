@@ -19,6 +19,7 @@ type (
 
 	S3Config struct {
 		Bucket string
+		Region string
 	}
 
 	ApiConfig struct {

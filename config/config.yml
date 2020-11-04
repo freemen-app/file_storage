@@ -6,4 +6,5 @@ logger:
   level: "debug"
 
 s3:
-  bucket: "${BUCKET_NAME|o4eredko.photos}"
+  bucket: "${AWS_BUCKET}"
+  region: "${AWS_REGION|eu-central-1}"

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	fileRepo "github.com/freemen-app/file_storage/adapter/repository/file"
+	"github.com/freemen-app/file_storage/config"
 	"github.com/freemen-app/file_storage/domain/dto"
 	customErrors "github.com/freemen-app/file_storage/domain/errors"
 	awsSession "github.com/freemen-app/file_storage/infrastructure/store/aws"
@@ -43,7 +44,7 @@ func TestNew(t *testing.T) {
 		})
 	})
 	t.Run("Succeed", func(t *testing.T) {
-		session := awsSession.New()
+		session := awsSession.New(config.S3Config{})
 		bucket := "test.bucket"
 
 		repo := fileRepo.New(session, bucket)
