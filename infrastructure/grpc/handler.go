@@ -11,9 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	fileStorage "github.com/freemen-app/api/file_storage"
+
 	grpcPresenter "github.com/freemen-app/file_storage/adapter/presenter/grpc"
 	"github.com/freemen-app/file_storage/domain/dto"
-	pb "github.com/freemen-app/file_storage/infrastructure/proto"
 	fileUseCase "github.com/freemen-app/file_storage/usecase/file"
 )
 
@@ -38,7 +39,7 @@ func NewHandler(fileUseCase fileUseCase.UseCase) *handler {
 	}
 }
 
-func (h *handler) Upload(stream pb.FileStorage_UploadServer) error {
+func (h *handler) Upload(stream fileStorage.FileStorage_UploadServer) error {
 	var file bytes.Buffer
 
 	req, err := stream.Recv()
@@ -74,18 +75,18 @@ func (h *handler) Upload(stream pb.FileStorage_UploadServer) error {
 	}
 	if url, err := h.fileUseCase.Upload(stream.Context(), uploadInput); err != nil {
 		return h.grpcPresenter.ConvertError(err).Err()
-	} else if err := stream.SendAndClose(&pb.UploadResponse{Url: url}); err != nil {
+	} else if err := stream.SendAndClose(&fileStorage.UploadResponse{Url: url}); err != nil {
 		return status.Errorf(codes.Unknown, "cannot send response: %v", err)
 	}
 	return nil
 }
 
-func (h *handler) Delete(ctx context.Context, request *pb.DeleteRequest) (*empty.Empty, error) {
+func (h *handler) Delete(ctx context.Context, request *fileStorage.DeleteRequest) (*empty.Empty, error) {
 	err := h.fileUseCase.Delete(ctx, dto.DeleteInput(request.Url))
 	return new(empty.Empty), err
 }
 
-func (h *handler) BatchDelete(ctx context.Context, request *pb.BatchDeleteRequest) (*empty.Empty, error) {
+func (h *handler) BatchDelete(ctx context.Context, request *fileStorage.BatchDeleteRequest) (*empty.Empty, error) {
 	urls := make([]dto.DeleteInput, len(request.Urls))
 	for i, url := range request.Urls {
 		urls[i] = dto.DeleteInput(url)

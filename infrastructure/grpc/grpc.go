@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net"
 
+	fileStorage "github.com/freemen-app/api/file_storage"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 
 	"github.com/freemen-app/file_storage/config"
 	"github.com/freemen-app/file_storage/infrastructure/app"
-	pb "github.com/freemen-app/file_storage/infrastructure/proto"
 )
 
 type api struct {
@@ -38,7 +38,7 @@ func New(app *app.App, config *config.ApiConfig) *api {
 
 	handler := NewHandler(app.UseCases().FileUseCase)
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(handler.ErrMiddleware))
-	pb.RegisterFileStorageServer(grpcServer, handler)
+	fileStorage.RegisterFileStorageServer(grpcServer, handler)
 
 	return &api{
 		listener: listener,

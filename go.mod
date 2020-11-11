@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/aws/aws-sdk-go v1.34.22
 	github.com/freemen-app/amqp-store v0.1.3
+	github.com/freemen-app/api v1.0.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
 	github.com/golang/protobuf v1.4.3
@@ -25,7 +26,7 @@ require (
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.27.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
