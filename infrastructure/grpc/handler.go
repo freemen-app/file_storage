@@ -1,12 +1,11 @@
 package grpcApi
 
 import (
-	"bytes"
 	"context"
 	"io"
+	"log"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -40,8 +39,6 @@ func NewHandler(fileUseCase fileUseCase.UseCase) *handler {
 }
 
 func (h *handler) Upload(stream fileStorage.FileStorage_UploadServer) error {
-	var file bytes.Buffer
-
 	req, err := stream.Recv()
 	if err != nil {
 		return status.Errorf(codes.Unknown, "cannot receive file info")
@@ -53,29 +50,37 @@ func (h *handler) Upload(stream fileStorage.FileStorage_UploadServer) error {
 		metadata.GetDirectory(),
 	)
 
-	for {
-		req, err := stream.Recv()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return status.Errorf(codes.Unknown, "cannot receive chunk data: %v", err)
+	pr, pw := io.Pipe()
+	go func(w *io.PipeWriter) {
+		for {
+			req, err := stream.Recv()
+			if err != nil {
+				log.Printf("Got error in pipewriter: %v", err)
+				_ = w.CloseWithError(err)
+				break
+			}
+			chunk := req.GetContent()
+			log.Printf("received a chunk with size: %d", len(chunk))
+			n, err := w.Write(chunk)
+			if err != nil {
+				_ = w.CloseWithError(err)
+				break
+			}
+			log.Printf("wrote %d bytes to a pipe writer", n)
 		}
-		chunk := req.GetContent()
-		log.Printf("received a chunk with size: %d", len(chunk))
-		if _, err = file.Write(chunk); err != nil {
-			return status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
-		}
-	}
+	}(pw)
 
 	uploadInput := &dto.UploadInput{
-		File:      bytes.NewReader(file.Bytes()),
+		File:      pr,
 		Directory: metadata.GetDirectory(),
 		Filename:  metadata.GetFilename(),
 		ACL:       "public-read",
 	}
 	if url, err := h.fileUseCase.Upload(stream.Context(), uploadInput); err != nil {
+		log.Printf("Got error from upload: %s", err.Error())
 		return h.grpcPresenter.ConvertError(err).Err()
 	} else if err := stream.SendAndClose(&fileStorage.UploadResponse{Url: url}); err != nil {
+		log.Printf("Got error from send and close: %s", err.Error())
 		return status.Errorf(codes.Unknown, "cannot send response: %v", err)
 	}
 	return nil
@@ -98,7 +103,7 @@ func (h *handler) BatchDelete(ctx context.Context, request *fileStorage.BatchDel
 func (h *handler) ErrMiddleware(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	resp, err := handler(ctx, req)
 	if err != nil {
-		log.Error().Msgf("[%T] %v", err, err)
+		// log.Error().Msgf("[%T] %v", err, err)
 		err = h.grpcPresenter.ConvertError(err).Err()
 	}
 	return resp, err

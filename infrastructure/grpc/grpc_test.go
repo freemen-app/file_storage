@@ -193,13 +193,13 @@ func TestHandler_Upload(t *testing.T) {
 				{
 					Method:     "Upload",
 					Args:       []interface{}{mock.Anything, mock.Anything},
-					ReturnArgs: []interface{}{"", validation.Errors{}},
+					ReturnArgs: []interface{}{"", validation.Errors{"test": errors.New("test")}},
 				},
 			},
 			wantErrCode: codes.InvalidArgument,
 		},
 		{
-			name: "validation error",
+			name: "internal error",
 			args: args{
 				ctx:      helpers.DefaultCtx,
 				metadata: &fileStorage.MetaData{Directory: "test", Filename: "test.jpg"},
@@ -231,12 +231,12 @@ func TestHandler_Upload(t *testing.T) {
 
 				uploadRequest := &fileStorage.UploadRequest{File: &fileStorage.UploadRequest_Metadata{Metadata: tt.args.metadata}}
 				if err := stream.Send(uploadRequest); err != nil {
-					return "", nil
+					return "", err
 				}
 
 				// Send file by chunks
 				reader := bufio.NewReader(tt.args.file)
-				chunk := make([]byte, 0, 500*units.KB)
+				chunk := make([]byte, 0, 1*units.MB)
 				for {
 					n, err := reader.Read(chunk[:cap(chunk)])
 					if err == io.EOF {
@@ -249,6 +249,9 @@ func TestHandler_Upload(t *testing.T) {
 						File: &fileStorage.UploadRequest_Content{Content: chunk[:n]},
 					}
 					if err := stream.Send(request); err != nil {
+						if err == io.EOF {
+							break
+						}
 						return "", err
 					}
 				}

@@ -1,6 +1,6 @@
 api:
   host: "localhost"
-  port: 8000
+  port: 8888
 
 logger:
   level: "debug"
@@ -21,4 +21,4 @@ amqp:
 
 s3:
   bucket: "${AWS_BUCKET}"
-  region: "${AWS_REGION|eu-central-1}"
+  region: "${AWS_REGION}"
